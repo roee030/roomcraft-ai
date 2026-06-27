@@ -5,32 +5,11 @@ import { Html } from '@react-three/drei'
 import { useRoomStore } from '../../stores/roomStore'
 import { useUiStore } from '../../stores/uiStore'
 import { CATALOG } from '../../constants/catalog'
+import { MESH_BOUNDS, DEFAULT_BOUNDS } from '../../constants/meshBounds'
 import { FurnitureMesh } from './FurnitureMesh'
-import type { ProductCategory } from '../../types'
 import styles from './FurnitureGizmo.module.css'
 
-// Tight bounding box [W, H, D] derived from actual FurnitureMesh geometry dimensions.
-// Used for selection outline + gizmo height offset.
-const MESH_BOUNDS: Partial<Record<ProductCategory, [number, number, number]>> = {
-  sofa:           [2.35, 1.00, 0.98],
-  bed:            [1.65, 0.82, 2.10],
-  armchair:       [0.88, 0.87, 0.82],
-  'coffee-table': [1.25, 0.46, 0.65],
-  dresser:        [1.02, 1.22, 0.52],
-  nightstand:     [0.52, 0.65, 0.42],
-  shelf:          [1.02, 2.02, 0.32],
-  'tv-unit':      [1.85, 0.54, 0.45],
-  'lamp-floor':   [0.44, 1.96, 0.44],
-  'lamp-table':   [0.28, 0.55, 0.28],
-  rug:            [2.05, 0.02, 3.05],
-  desk:           [1.45, 0.78, 0.68],
-  'office-chair': [0.68, 1.25, 0.56],
-  'dining-table': [1.24, 0.78, 1.24],
-  'dining-chair': [0.48, 1.10, 0.46],
-  wardrobe:       [1.00, 2.00, 0.60],
-}
-const DEFAULT_BOUNDS: [number, number, number] = [1.0, 1.0, 1.0]
-const PAD = 0.10 // padding around tight bounds for selection box
+const PAD = 0.08
 
 const IconRotate = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -95,6 +74,10 @@ export const FurnitureItem = ({ instanceId }: Props) => {
   const variant = product.variants.find((v) => v.id === item.variantId) ?? product.variants[0]
   const [bW, bH, bD] = MESH_BOUNDS[product.category] ?? DEFAULT_BOUNDS
 
+  // Border colors: yellow on hover (like IKEA), blue on selection
+  const borderColor = isSelected ? '#0058A3' : '#E8A000'
+  const borderOpacity = isSelected ? 1 : 0.75
+
   return (
     <group
       ref={groupRef}
@@ -107,22 +90,23 @@ export const FurnitureItem = ({ instanceId }: Props) => {
     >
       <FurnitureMesh category={product.category} color={variant.color} />
 
-      {/* Floor-level grab dot — always visible as interaction handle */}
-      <mesh position={[0, 0.018, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.055, 0.11, 24]} />
+      {/* Floor grab dot — always visible; tells user the item is movable */}
+      <mesh position={[0, 0.016, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.10, 24]} />
         <meshBasicMaterial
-          color={isSelected ? '#0058A3' : isHovered ? '#1A1A1A' : '#666666'}
+          color={isSelected ? '#0058A3' : isHovered ? '#222222' : '#777777'}
           transparent
-          opacity={isSelected ? 1 : isHovered ? 0.85 : 0.45}
+          opacity={isSelected ? 1 : isHovered ? 0.88 : 0.50}
+          depthWrite={false}
         />
       </mesh>
 
-      {/* Selection / hover outline — tight-fitting box per category */}
+      {/* Tight bounding box outline — correct size per category, sits on floor */}
       {(isSelected || isHovered) && (
         <mesh position={[0, bH / 2, 0]}>
           <boxGeometry args={[bW + PAD, bH + PAD * 0.5, bD + PAD]} />
           <meshBasicMaterial
-            color={isSelected ? '#0058A3' : '#1A1A1A'}
+            color={borderColor}
             transparent
             opacity={isSelected ? 0.07 : 0.04}
             side={THREE.BackSide}
@@ -132,15 +116,35 @@ export const FurnitureItem = ({ instanceId }: Props) => {
       {(isSelected || isHovered) && (
         <lineSegments position={[0, bH / 2, 0]}>
           <edgesGeometry args={[new THREE.BoxGeometry(bW + PAD, bH + PAD * 0.5, bD + PAD)]} />
-          <lineBasicMaterial
-            color={isSelected ? '#0058A3' : '#555555'}
-            transparent
-            opacity={isSelected ? 1 : 0.5}
-          />
+          <lineBasicMaterial color={borderColor} transparent opacity={borderOpacity} />
         </lineSegments>
       )}
 
-      {/* Floating inline gizmo */}
+      {/* Hover tooltip — "Click for options" (IKEA-style), hidden when selected */}
+      {isHovered && !isSelected && (
+        <Html
+          center
+          position={[0, 0.05, 0]}
+          zIndexRange={[250, 0]}
+          style={{ pointerEvents: 'none' }}
+        >
+          <div style={{
+            background: 'rgba(20,20,20,0.82)',
+            color: '#fff',
+            fontSize: 11,
+            fontFamily: 'var(--tenant-font)',
+            padding: '5px 11px',
+            borderRadius: 5,
+            whiteSpace: 'nowrap',
+            letterSpacing: 0.01,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          }}>
+            Click to access more options
+          </div>
+        </Html>
+      )}
+
+      {/* Full inline gizmo — color swatches + action toolbar — persists while selected */}
       {isSelected && (
         <Html
           center

@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Suspense } from 'react'
 import * as THREE from 'three'
@@ -15,10 +16,23 @@ export const RoomCanvas = () => {
   const setIsDragging = useUiStore((s) => s.setIsDragging)
   const setSelected = useUiStore((s) => s.setSelectedInstanceId)
 
-  const handleCanvasClick = () => setSelected(null)
+  // Track whether pointerUp ended a real drag (vs a click on empty canvas).
+  // Prevents the canvas onClick from deselecting right after every drag release.
+  const justDraggedRef = useRef(false)
+
   const stopDrag = () => {
+    const { isDragging } = useUiStore.getState()
+    if (isDragging) justDraggedRef.current = true
     setIsDragging(false)
     document.body.style.cursor = ''
+  }
+
+  const handleCanvasClick = () => {
+    if (justDraggedRef.current) {
+      justDraggedRef.current = false
+      return  // drag release — keep selection
+    }
+    setSelected(null)
   }
 
   return (
