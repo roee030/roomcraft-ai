@@ -1,5 +1,6 @@
 import { Canvas } from '@react-three/fiber'
 import { Suspense } from 'react'
+import * as THREE from 'three'
 import { useRoomStore } from '../../stores/roomStore'
 import { useUiStore } from '../../stores/uiStore'
 import { Room } from './Room'
@@ -20,7 +21,7 @@ export const RoomCanvas = () => {
   return (
     <div className={styles.canvasWrap}>
       <Canvas
-        shadows
+        shadows={{ type: THREE.PCFShadowMap }}
         camera={{ fov: 45, near: 0.1, far: 100 }}
         gl={{ antialias: true, alpha: false }}
         onPointerUp={stopDrag}

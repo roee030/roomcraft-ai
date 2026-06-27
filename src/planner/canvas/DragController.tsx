@@ -13,6 +13,7 @@ export const DragController = () => {
   const isRotating = useUiStore((s) => s.isRotating)
   const updatePosition = useRoomStore((s) => s.updateItemPosition)
   const updateRotation = useRoomStore((s) => s.updateItemRotation)
+  const getPlacedItems = useRoomStore.getState
 
   const intersectPt = useRef(new THREE.Vector3())
   const lastPointer = useRef(new THREE.Vector2())
@@ -34,7 +35,11 @@ export const DragController = () => {
 
     if (isRotating) {
       const dx = pointer.x - lastPointer.current.x
-      updateRotation(selectedId, dx * Math.PI * 2)
+      const currentItems = getPlacedItems().placedItems
+      const item = currentItems.find((i) => i.instanceId === selectedId)
+      if (item) {
+        updateRotation(selectedId, item.rotationY + dx * Math.PI * 2)
+      }
     }
 
     lastPointer.current.copy(pointer)
