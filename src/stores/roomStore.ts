@@ -29,7 +29,7 @@ export const useRoomStore = create<RoomState>()((set) => ({
       instanceId: nanoid(),
       productId,
       variantId,
-      position: [0, 0, 0],
+      position: [(Math.random() - 0.5) * 2, 0, (Math.random() - 0.5) * 2],
       rotationY: 0,
       scale: 1,
     }

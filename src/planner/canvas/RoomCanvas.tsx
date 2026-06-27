@@ -28,6 +28,7 @@ export const RoomCanvas = () => {
         onClick={handleCanvasClick}
         style={{ background: '#D6D2CB' }}
       >
+        <color attach="background" args={['#D6D2CB']} />
         <fog attach="fog" args={['#D6D2CB', 18, 35]} />
         <Suspense fallback={null}>
           <Lights />
