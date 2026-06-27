@@ -1,0 +1,87 @@
+.gizmo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  pointer-events: none;
+}
+
+/* ── Variant circles ─────────────────────────────────── */
+.variantRow {
+  display: flex;
+  gap: 7px;
+  background: rgba(0, 0, 0, 0.76);
+  border-radius: 999px;
+  padding: 6px 12px;
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+.variantDot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+.variantDot:hover {
+  transform: scale(1.13);
+}
+.variantActive {
+  border-color: #FFC300;
+  box-shadow: 0 0 0 2px #FFC300;
+}
+
+/* ── Action toolbar ──────────────────────────────────── */
+.actionBar {
+  display: flex;
+  background: rgba(20, 20, 20, 0.88);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 1px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+}
+
+.actionBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 10px;
+  font-family: var(--tenant-font);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.12s;
+  white-space: nowrap;
+  min-width: 54px;
+  line-height: 1;
+}
+.actionBtn:hover {
+  background: rgba(255, 255, 255, 0.13);
+}
+.actionBtn svg {
+  flex-shrink: 0;
+}
+
+.sep {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 6px 2px;
+  flex-shrink: 0;
+}
+
+.removeBtn {
+  color: #ff7575;
+}
+.removeBtn:hover {
+  background: rgba(255, 80, 80, 0.14);
+}

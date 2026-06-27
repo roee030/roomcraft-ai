@@ -11,13 +11,15 @@ interface RoomState {
   setRoom: (room: RoomConfig) => void
   addItem: (productId: string, variantId: string) => PlacedItem
   removeItem: (instanceId: string) => void
+  duplicateItem: (instanceId: string) => void
   updateItemPosition: (instanceId: string, position: [number, number, number]) => void
   updateItemRotation: (instanceId: string, rotationY: number) => void
+  rotateItem90: (instanceId: string) => void
   updateItemVariant: (instanceId: string, variantId: string) => void
   undo: () => void
 }
 
-export const useRoomStore = create<RoomState>()((set) => ({
+export const useRoomStore = create<RoomState>()((set, get) => ({
   room: ROOM_PRESETS[0],
   placedItems: [],
   history: [],
@@ -46,6 +48,20 @@ export const useRoomStore = create<RoomState>()((set) => ({
       placedItems: s.placedItems.filter((i) => i.instanceId !== instanceId),
     })),
 
+  duplicateItem: (instanceId) => {
+    const original = get().placedItems.find((i) => i.instanceId === instanceId)
+    if (!original) return
+    const copy: PlacedItem = {
+      ...original,
+      instanceId: nanoid(),
+      position: [original.position[0] + 0.8, 0, original.position[2] + 0.8],
+    }
+    set((s) => ({
+      history: [...s.history, s.placedItems],
+      placedItems: [...s.placedItems, copy],
+    }))
+  },
+
   updateItemPosition: (instanceId, position) =>
     set((s) => ({
       placedItems: s.placedItems.map((i) =>
@@ -57,6 +73,13 @@ export const useRoomStore = create<RoomState>()((set) => ({
     set((s) => ({
       placedItems: s.placedItems.map((i) =>
         i.instanceId === instanceId ? { ...i, rotationY } : i
+      ),
+    })),
+
+  rotateItem90: (instanceId) =>
+    set((s) => ({
+      placedItems: s.placedItems.map((i) =>
+        i.instanceId === instanceId ? { ...i, rotationY: i.rotationY + Math.PI / 2 } : i
       ),
     })),
 
