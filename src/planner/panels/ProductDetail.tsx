@@ -57,10 +57,11 @@ export const ProductDetail = () => {
   const [imgIdx, setImgIdx] = useState(0)
 
   const item = placedItems.find((i) => i.instanceId === selectedId)
-  if (!item) return null
+  // Always keep 300px in the layout — prevents canvas resize (which causes camera jump)
+  if (!item) return <div className={styles.panel} style={{ visibility: 'hidden', pointerEvents: 'none' }} />
 
   const product = CATALOG.find((p) => p.id === item.productId)
-  if (!product) return null
+  if (!product) return <div className={styles.panel} style={{ visibility: 'hidden', pointerEvents: 'none' }} />
 
   const similarProducts = CATALOG.filter((p) => product.similarIds.includes(p.id))
   const goesWithProducts = CATALOG.filter((p) => product.goesWithIds.includes(p.id))

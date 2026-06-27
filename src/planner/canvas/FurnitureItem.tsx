@@ -9,25 +9,28 @@ import { FurnitureMesh } from './FurnitureMesh'
 import type { ProductCategory } from '../../types'
 import styles from './FurnitureGizmo.module.css'
 
-// Approximate gizmo Y offset above each category's mesh center
-const GIZMO_Y: Partial<Record<ProductCategory, number>> = {
-  'lamp-floor': 2.3,
-  wardrobe: 2.1,
-  shelf: 1.9,
-  dresser: 1.6,
-  'office-chair': 1.5,
-  sofa: 1.4,
-  armchair: 1.4,
-  bed: 1.2,
-  'dining-chair': 1.2,
-  desk: 1.1,
-  'dining-table': 1.1,
-  nightstand: 1.0,
-  'tv-unit': 0.8,
-  'lamp-table': 0.8,
-  'coffee-table': 0.65,
-  rug: 0.35,
+// Tight bounding box [W, H, D] derived from actual FurnitureMesh geometry dimensions.
+// Used for selection outline + gizmo height offset.
+const MESH_BOUNDS: Partial<Record<ProductCategory, [number, number, number]>> = {
+  sofa:           [2.35, 1.00, 0.98],
+  bed:            [1.65, 0.82, 2.10],
+  armchair:       [0.88, 0.87, 0.82],
+  'coffee-table': [1.25, 0.46, 0.65],
+  dresser:        [1.02, 1.22, 0.52],
+  nightstand:     [0.52, 0.65, 0.42],
+  shelf:          [1.02, 2.02, 0.32],
+  'tv-unit':      [1.85, 0.54, 0.45],
+  'lamp-floor':   [0.44, 1.96, 0.44],
+  'lamp-table':   [0.28, 0.55, 0.28],
+  rug:            [2.05, 0.02, 3.05],
+  desk:           [1.45, 0.78, 0.68],
+  'office-chair': [0.68, 1.25, 0.56],
+  'dining-table': [1.24, 0.78, 1.24],
+  'dining-chair': [0.48, 1.10, 0.46],
+  wardrobe:       [1.00, 2.00, 0.60],
 }
+const DEFAULT_BOUNDS: [number, number, number] = [1.0, 1.0, 1.0]
+const PAD = 0.10 // padding around tight bounds for selection box
 
 const IconRotate = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -68,18 +71,29 @@ export const FurnitureItem = ({ instanceId }: Props) => {
       e.stopPropagation()
       setSelected(instanceId)
       setIsDragging(true)
+      document.body.style.cursor = 'grabbing'
     },
     [instanceId, setSelected, setIsDragging]
   )
-  const handlePointerEnter = useCallback(() => setHovered(instanceId), [instanceId, setHovered])
-  const handlePointerLeave = useCallback(() => setHovered(null), [setHovered])
+  const handlePointerEnter = useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
+      e.stopPropagation()
+      setHovered(instanceId)
+      document.body.style.cursor = 'grab'
+    },
+    [instanceId, setHovered]
+  )
+  const handlePointerLeave = useCallback(() => {
+    setHovered(null)
+    document.body.style.cursor = ''
+  }, [setHovered])
 
   if (!item) return null
   const product = CATALOG.find((p) => p.id === item.productId)
   if (!product) return null
 
   const variant = product.variants.find((v) => v.id === item.variantId) ?? product.variants[0]
-  const gizmoY = GIZMO_Y[product.category] ?? 1.2
+  const [bW, bH, bD] = MESH_BOUNDS[product.category] ?? DEFAULT_BOUNDS
 
   return (
     <group
@@ -93,36 +107,49 @@ export const FurnitureItem = ({ instanceId }: Props) => {
     >
       <FurnitureMesh category={product.category} color={variant.color} />
 
-      {/* Selection / hover outline */}
+      {/* Floor-level grab dot — always visible as interaction handle */}
+      <mesh position={[0, 0.018, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.055, 0.11, 24]} />
+        <meshBasicMaterial
+          color={isSelected ? '#0058A3' : isHovered ? '#1A1A1A' : '#666666'}
+          transparent
+          opacity={isSelected ? 1 : isHovered ? 0.85 : 0.45}
+        />
+      </mesh>
+
+      {/* Selection / hover outline — tight-fitting box per category */}
       {(isSelected || isHovered) && (
-        <mesh>
-          <boxGeometry args={[2.5, 2.5, 2.5]} />
+        <mesh position={[0, bH / 2, 0]}>
+          <boxGeometry args={[bW + PAD, bH + PAD * 0.5, bD + PAD]} />
           <meshBasicMaterial
-            color={isSelected ? '#0058A3' : '#FFC300'}
+            color={isSelected ? '#0058A3' : '#1A1A1A'}
             transparent
-            opacity={0.07}
+            opacity={isSelected ? 0.07 : 0.04}
             side={THREE.BackSide}
           />
         </mesh>
       )}
-      {isSelected && (
-        <lineSegments>
-          <edgesGeometry args={[new THREE.BoxGeometry(2.5, 2.5, 2.5)]} />
-          <lineBasicMaterial color="#0058A3" linewidth={2} />
+      {(isSelected || isHovered) && (
+        <lineSegments position={[0, bH / 2, 0]}>
+          <edgesGeometry args={[new THREE.BoxGeometry(bW + PAD, bH + PAD * 0.5, bD + PAD)]} />
+          <lineBasicMaterial
+            color={isSelected ? '#0058A3' : '#555555'}
+            transparent
+            opacity={isSelected ? 1 : 0.5}
+          />
         </lineSegments>
       )}
 
-      {/* Floating inline gizmo — shown when item is selected */}
+      {/* Floating inline gizmo */}
       {isSelected && (
         <Html
           center
-          position={[0, gizmoY, 0]}
+          position={[0, bH + 0.35, 0]}
           zIndexRange={[300, 0]}
           style={{ pointerEvents: 'none' }}
         >
           <div className={styles.gizmo} onClick={(e) => e.stopPropagation()}>
 
-            {/* Color variant circles */}
             {product.variants.length > 1 && (
               <div className={styles.variantRow}>
                 {product.variants.map((v) => (
@@ -137,7 +164,6 @@ export const FurnitureItem = ({ instanceId }: Props) => {
               </div>
             )}
 
-            {/* Action toolbar */}
             <div className={styles.actionBar}>
               <button
                 className={styles.actionBtn}
@@ -147,9 +173,7 @@ export const FurnitureItem = ({ instanceId }: Props) => {
                 <IconRotate />
                 <span>Rotate</span>
               </button>
-
               <div className={styles.sep} />
-
               <button
                 className={styles.actionBtn}
                 onClick={(e) => { e.stopPropagation(); duplicateItem(instanceId) }}
@@ -158,9 +182,7 @@ export const FurnitureItem = ({ instanceId }: Props) => {
                 <IconCopy />
                 <span>Copy</span>
               </button>
-
               <div className={styles.sep} />
-
               <button
                 className={`${styles.actionBtn} ${styles.removeBtn}`}
                 onClick={(e) => {

@@ -41,7 +41,6 @@ export const PlannerApp = () => {
   const room = useRoomStore((s) => s.room)
   const placedItems = useRoomStore((s) => s.placedItems)
   const setScreen = useUiStore((s) => s.setScreen)
-  const selectedId = useUiStore((s) => s.selectedInstanceId)
   const tenant = useTenantConfig()
 
   const total = placedItems.reduce((sum, item) => {
@@ -82,7 +81,7 @@ export const PlannerApp = () => {
           <RoomCanvas />
           <ViewModeBar />
         </div>
-        {selectedId && <ProductDetail />}
+        <ProductDetail />
       </div>
     </div>
   )

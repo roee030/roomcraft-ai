@@ -16,7 +16,10 @@ export const RoomCanvas = () => {
   const setSelected = useUiStore((s) => s.setSelectedInstanceId)
 
   const handleCanvasClick = () => setSelected(null)
-  const stopDrag = () => setIsDragging(false)
+  const stopDrag = () => {
+    setIsDragging(false)
+    document.body.style.cursor = ''
+  }
 
   return (
     <div className={styles.canvasWrap}>
