@@ -46,11 +46,17 @@ export const DragController = () => {
           )
         }
 
-        // Per-furniture bounds: clamp center so edges stay inside room walls
+        // Per-furniture bounds: clamp center so edges stay inside room walls.
+        // Use rotation-aware AABB so a 90°-rotated bed doesn't escape through side walls.
         const product = item ? CATALOG.find((p) => p.id === item.productId) : null
         const [bW, , bD] = product ? (MESH_BOUNDS[product.category] ?? DEFAULT_BOUNDS) : DEFAULT_BOUNDS
-        const hw = Math.max(0, room.width / 2 - bW / 2 - WALL_MARGIN)
-        const hd = Math.max(0, room.depth / 2 - bD / 2 - WALL_MARGIN)
+        const rotY = item?.rotationY ?? 0
+        const sinA = Math.abs(Math.sin(rotY))
+        const cosA = Math.abs(Math.cos(rotY))
+        const effectiveW = bW * cosA + bD * sinA
+        const effectiveD = bD * cosA + bW * sinA
+        const hw = Math.max(0, room.width / 2 - effectiveW / 2 - WALL_MARGIN)
+        const hd = Math.max(0, room.depth / 2 - effectiveD / 2 - WALL_MARGIN)
 
         // Reject far intersections (ray nearly parallel to floor)
         if (camera.position.distanceTo(intersectPt.current) < 35) {

@@ -45,6 +45,26 @@ export const FurnitureItem = ({ instanceId }: Props) => {
   const updateVariant = useRoomStore((s) => s.updateItemVariant)
   const groupRef = useRef<THREE.Group>(null!)
 
+  // Compute bounds before early returns so hooks are called unconditionally
+  const product = item ? CATALOG.find((p) => p.id === item.productId) : null
+  const [bW, bH, bD] = product ? (MESH_BOUNDS[product.category] ?? DEFAULT_BOUNDS) : DEFAULT_BOUNDS
+
+  // Projects the item's top to 2D screen space so the gizmo sits directly above the
+  // furniture regardless of camera angle — no perspective drift.
+  const calculateGizmoPosition = useCallback(
+    (el: THREE.Object3D, camera: THREE.Camera, size: { width: number; height: number }): [number, number] => {
+      const pos = new THREE.Vector3()
+      el.getWorldPosition(pos)  // Html at [0,0,0] local → item floor center in world
+      pos.y += bH               // step up to item top
+      pos.project(camera)
+      return [
+        (pos.x * 0.5 + 0.5) * size.width,
+        (-pos.y * 0.5 + 0.5) * size.height - 10,  // 10px gap above item top
+      ]
+    },
+    [bH],
+  )
+
   const handlePointerDown = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation()
@@ -52,7 +72,7 @@ export const FurnitureItem = ({ instanceId }: Props) => {
       setIsDragging(true)
       document.body.style.cursor = 'grabbing'
     },
-    [instanceId, setSelected, setIsDragging]
+    [instanceId, setSelected, setIsDragging],
   )
   const handlePointerEnter = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
@@ -60,7 +80,7 @@ export const FurnitureItem = ({ instanceId }: Props) => {
       setHovered(instanceId)
       document.body.style.cursor = 'grab'
     },
-    [instanceId, setHovered]
+    [instanceId, setHovered],
   )
   const handlePointerLeave = useCallback(() => {
     setHovered(null)
@@ -68,13 +88,10 @@ export const FurnitureItem = ({ instanceId }: Props) => {
   }, [setHovered])
 
   if (!item) return null
-  const product = CATALOG.find((p) => p.id === item.productId)
   if (!product) return null
 
   const variant = product.variants.find((v) => v.id === item.variantId) ?? product.variants[0]
-  const [bW, bH, bD] = MESH_BOUNDS[product.category] ?? DEFAULT_BOUNDS
 
-  // Border colors: yellow on hover (like IKEA), blue on selection
   const borderColor = isSelected ? '#0058A3' : '#E8A000'
   const borderOpacity = isSelected ? 1 : 0.75
 
@@ -144,13 +161,15 @@ export const FurnitureItem = ({ instanceId }: Props) => {
         </Html>
       )}
 
-      {/* Full inline gizmo — color swatches + action toolbar — persists while selected */}
+      {/* Full inline gizmo — color swatches + action toolbar — persists while selected.
+          calculatePosition pins it to the item's top in 2D screen space so it never
+          drifts away in perspective even for items near the room edges. */}
       {isSelected && (
         <Html
+          calculatePosition={calculateGizmoPosition}
+          position={[0, 0, 0]}
           center
-          position={[0, bH + 0.35, 0]}
           zIndexRange={[300, 0]}
-          style={{ pointerEvents: 'none' }}
         >
           <div className={styles.gizmo} onClick={(e) => e.stopPropagation()}>
 
