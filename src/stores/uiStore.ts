@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { ViewMode } from '../types'
 
-type Screen = 'setup' | 'planner'
+type Screen = 'welcome' | 'setup' | 'planner' | 'ai-generate'
 type PanelTab = 'list' | 'favorites'
 
 interface UiState {
@@ -25,7 +25,7 @@ interface UiState {
 }
 
 export const useUiStore = create<UiState>()((set) => ({
-  screen: 'setup',
+  screen: 'welcome',
   viewMode: 'dollhouse',
   selectedInstanceId: null,
   hoveredInstanceId: null,

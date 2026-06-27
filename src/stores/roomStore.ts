@@ -9,6 +9,7 @@ interface RoomState {
   history: PlacedItem[][]
 
   setRoom: (room: RoomConfig) => void
+  loadAIDesign: (room: RoomConfig, items: PlacedItem[]) => void
   addItem: (productId: string, variantId: string) => PlacedItem
   removeItem: (instanceId: string) => void
   duplicateItem: (instanceId: string) => void
@@ -25,6 +26,7 @@ export const useRoomStore = create<RoomState>()((set, get) => ({
   history: [],
 
   setRoom: (room) => set({ room }),
+  loadAIDesign: (room, placedItems) => set({ room, placedItems, history: [] }),
 
   addItem: (productId, variantId) => {
     const item: PlacedItem = {
