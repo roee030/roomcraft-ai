@@ -7,7 +7,9 @@ import { CATALOG } from '../../constants/catalog'
 import { MESH_BOUNDS, DEFAULT_BOUNDS } from '../../constants/meshBounds'
 
 const FLOOR_PLANE = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
-const WALL_MARGIN = 0.05 // 5 cm clearance from walls
+// Wall inner face is at room.width/2 - WALL_THICKNESS/2 (= room.width/2 - 0.04).
+// Margin must exceed 0.04 to keep items from clipping through the wall surface.
+const WALL_MARGIN = 0.12
 
 export const DragController = () => {
   const { camera, raycaster, pointer } = useThree()

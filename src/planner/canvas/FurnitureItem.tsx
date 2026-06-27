@@ -107,14 +107,16 @@ export const FurnitureItem = ({ instanceId }: Props) => {
     >
       <FurnitureMesh category={product.category} color={variant.color} />
 
-      {/* Floor grab dot — always visible; tells user the item is movable */}
-      <mesh position={[0, 0.016, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.10, 24]} />
+      {/* Floor grab dot — depthTest=false ensures it's always visible above the furniture
+          base mesh (which starts at y=0 and would otherwise occlude the dot) */}
+      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
+        <circleGeometry args={[0.13, 24]} />
         <meshBasicMaterial
-          color={isSelected ? '#0058A3' : isHovered ? '#222222' : '#777777'}
+          color={isSelected ? '#0058A3' : isHovered ? '#111111' : '#555555'}
           transparent
-          opacity={isSelected ? 1 : isHovered ? 0.88 : 0.50}
+          opacity={isSelected ? 0.95 : isHovered ? 0.80 : 0.60}
           depthWrite={false}
+          depthTest={false}
         />
       </mesh>
 
@@ -162,14 +164,14 @@ export const FurnitureItem = ({ instanceId }: Props) => {
       )}
 
       {/* Full inline gizmo — color swatches + action toolbar — persists while selected.
-          calculatePosition pins it to the item's top in 2D screen space so it never
-          drifts away in perspective even for items near the room edges. */}
+          calculatePosition pins it to item top in 2D screen space; translate(-50%,-100%)
+          bottom-anchors so the gizmo floats ABOVE the item rather than overlapping it. */}
       {isSelected && (
         <Html
           calculatePosition={calculateGizmoPosition}
           position={[0, 0, 0]}
-          center
           zIndexRange={[300, 0]}
+          style={{ transform: 'translate(-50%, -100%)' }}
         >
           <div className={styles.gizmo} onClick={(e) => e.stopPropagation()}>
 
