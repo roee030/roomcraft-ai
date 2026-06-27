@@ -1,0 +1,9 @@
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--tenant-font);
+  font-size: 13px;
+}
+.count { color: var(--tenant-text-secondary); }
+.total { font-weight: 700; color: var(--tenant-text); }

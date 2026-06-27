@@ -1,0 +1,274 @@
+.screen {
+  display: flex;
+  height: 100vh;
+  font-family: var(--tenant-font);
+  background: var(--tenant-bg);
+}
+
+/* ── Left sidebar ──────────────────────────────────────────────── */
+.left {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--tenant-text);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 48px 32px;
+}
+
+.brand { margin-bottom: 56px; }
+
+.logo {
+  width: 48px;
+  height: 48px;
+  background: var(--tenant-accent);
+  color: #fff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.brandName {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: #fff;
+}
+
+.tagline {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.steps { display: flex; flex-direction: column; gap: 8px; }
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.5);
+}
+.step:hover { background: rgba(255,255,255,0.08); }
+.stepActive { background: rgba(255,255,255,0.12); color: #fff; }
+.stepDone { color: rgba(255,255,255,0.7); }
+
+.stepNum {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.stepActive .stepNum { background: var(--tenant-accent); border-color: var(--tenant-accent); color: #fff; }
+
+/* ── Right content ──────────────────────────────────────────────── */
+.right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+.panel {
+  width: 100%;
+  max-width: 640px;
+}
+
+.panelTitle {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--tenant-text);
+  margin: 0 0 24px;
+}
+
+.subTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tenant-text-secondary);
+  margin: 20px 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Room grid */
+.roomGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.roomCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  border: 2px solid var(--tenant-border);
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+.roomCard:hover { border-color: #aaa; }
+.roomActive { border-color: var(--tenant-accent) !important; background: #f0f6ff; }
+
+.roomIcon { font-size: 28px; margin-bottom: 6px; }
+.roomLabel { font-weight: 600; font-size: 15px; color: var(--tenant-text); }
+.roomDims { font-size: 12px; color: var(--tenant-text-secondary); }
+
+/* Dimensions */
+.dimRow { display: flex; gap: 12px; margin-bottom: 28px; }
+.dimLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--tenant-text-secondary);
+  flex: 1;
+}
+.dimInput {
+  padding: 9px 12px;
+  border: 1.5px solid var(--tenant-border);
+  border-radius: 8px;
+  font-family: var(--tenant-font);
+  font-size: 14px;
+  color: var(--tenant-text);
+  background: #fff;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.dimInput:focus { border-color: var(--tenant-accent); }
+
+/* Style grid */
+.styleGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.styleCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 16px 18px;
+  border-radius: 10px;
+  border: 2px solid var(--tenant-border);
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+.styleCard strong { font-size: 14px; font-weight: 600; color: var(--tenant-text); }
+.styleCard span { font-size: 12px; color: var(--tenant-text-secondary); }
+.styleCard:hover { border-color: #aaa; }
+.styleActive { border-color: var(--tenant-accent) !important; background: #f0f6ff; }
+
+/* Color grid */
+.colorGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.colorSwatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  outline: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.colorSwatch:hover { outline-color: #aaa; outline-offset: 3px; }
+.colorActive { outline-color: var(--tenant-text) !important; outline-offset: 3px; }
+
+/* Floor grid */
+.floorGrid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.floorCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: 2px solid var(--tenant-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--tenant-text);
+}
+.floorCard:hover { border-color: #aaa; }
+.floorActive { border-color: var(--tenant-accent) !important; background: #f0f6ff; }
+.floorSwatch {
+  width: 52px;
+  height: 32px;
+  border-radius: 4px;
+}
+
+/* Buttons */
+.navRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.nextBtn, .startBtn {
+  padding: 13px 28px;
+  background: var(--tenant-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--tenant-radius-button);
+  font-family: var(--tenant-font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.nextBtn:hover, .startBtn:hover { opacity: 0.9; }
+
+.backBtn {
+  padding: 13px 20px;
+  background: transparent;
+  color: var(--tenant-text);
+  border: 1.5px solid var(--tenant-border);
+  border-radius: var(--tenant-radius-button);
+  font-family: var(--tenant-font);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.backBtn:hover { background: var(--tenant-surface); }

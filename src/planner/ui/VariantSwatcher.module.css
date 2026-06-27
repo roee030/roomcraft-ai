@@ -1,0 +1,15 @@
+.wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color);
+  border: 2px solid transparent;
+  outline: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.swatch:hover { outline-color: #aaa; outline-offset: 2px; }
+.swatch.active { border-color: #fff; outline-color: var(--tenant-text); outline-offset: 2px; }

@@ -1,0 +1,96 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: var(--tenant-font);
+  background: var(--tenant-bg);
+  overflow: hidden;
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 54px;
+  padding: 0 16px;
+  background: var(--tenant-bg);
+  border-bottom: 1px solid var(--tenant-border);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.headerLeft,
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.headerRight { justify-content: flex-end; }
+.headerCenter { flex: 0 0 auto; }
+
+.iconBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--tenant-border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--tenant-text);
+  transition: all 0.15s;
+}
+.iconBtn:hover { background: var(--tenant-surface); }
+
+.roomName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tenant-text);
+}
+
+.brandName {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--tenant-text);
+  letter-spacing: 0.04em;
+}
+
+.totalBadge {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tenant-text);
+}
+
+.summaryBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: var(--tenant-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--tenant-radius-button);
+  font-family: var(--tenant-font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.summaryBtn:hover { opacity: 0.9; }
+
+/* ── Main layout ──────────────────────────────────────────────────── */
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.canvasArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
