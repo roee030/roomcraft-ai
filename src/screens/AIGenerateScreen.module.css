@@ -533,9 +533,51 @@
   background: white;
   border-radius: 18px;
   box-shadow: 0 16px 56px rgba(0,0,0,0.24), 0 2px 8px rgba(0,0,0,0.1);
-  padding: 16px;
-  width: 235px;
+  width: 260px;
+  overflow: hidden;
   animation: card-in 0.18s ease-out;
+}
+
+/* Product image at top of card */
+.hotspotCardImgWrap {
+  position: relative;
+  width: 100%;
+  height: 130px;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+.hotspotCardImgEl {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hotspotCardImgVariant {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  border-radius: 999px;
+  padding: 3px 8px 3px 4px;
+  font-size: 0.72rem;
+  color: white;
+  font-weight: 600;
+}
+.hotspotCardColorDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.5);
+  flex-shrink: 0;
+}
+
+/* Card body padding */
+.hotspotCardBody {
+  padding: 12px 14px 14px;
 }
 
 @keyframes card-in {
@@ -545,21 +587,23 @@
 
 .hotspotCardClose {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 24px;
-  height: 24px;
-  background: #f3f4f6;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
   border: none;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #666;
+  color: white;
   padding: 0;
+  z-index: 5;
 }
-.hotspotCardClose:hover { background: #e5e7eb; }
+.hotspotCardClose:hover { background: rgba(0,0,0,0.65); }
 
 .hotspotCardHeader {
   display: flex;

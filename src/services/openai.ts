@@ -178,11 +178,12 @@ AVAILABLE FLOOR TYPES: oak | walnut | concrete | white-tile | herringbone
 }
 
 DESIGN RULES:
+- Select ONLY 3–5 items total. Choose the most impactful pieces, not everything possible
 - Bed headboard against back wall: z ≈ -(depth/2 - 1.2), rotationY=0
 - Sofa faces center/TV: z ≈ -(depth/2 - 1.0), rotationY=3.1416
 - Rug under center seating: x≈0, z≈0
 - Nightstands beside bed, one on each side if space allows
-- Large items first (bed/sofa), then supporting (nightstand, lamp, rug)
+- Large items first (bed/sofa), then at most 2 supporting pieces
 - Never place 2 beds or 2 sofas
 - Choose variants whose colors match: light rooms → light variants, dark/moody rooms → rich dark variants`
 
@@ -309,6 +310,13 @@ async function resizeToBlob(base64: string, mimeType: string, maxDim = 1024): Pr
   })
 }
 
+// Categories we can visibly swap in a photo (skip small lamps/shelf)
+const SWAPPABLE_CATEGORIES = new Set([
+  'bed', 'sofa', 'armchair', 'dresser', 'nightstand',
+  'coffee-table', 'tv-unit', 'rug', 'desk', 'office-chair',
+  'dining-table', 'dining-chair',
+])
+
 export async function generateEditedRoomPhoto(
   imageBase64: string,
   mimeType: string,
@@ -318,25 +326,35 @@ export async function generateEditedRoomPhoto(
   if (!apiKey) throw new Error('NO_API_KEY')
   const client = new OpenAI({ apiKey, dangerouslyAllowBrowser: true })
 
-  const itemLines = result.placedItems
+  // Only send the 3 most impactful visible pieces — skip small/ambient items
+  const editItems = result.placedItems
+    .filter((item) => {
+      const product = CATALOG.find((p) => p.id === item.productId)
+      return product && SWAPPABLE_CATEGORIES.has(product.category)
+    })
+    .slice(0, 3)
+
+  const itemLines = editItems
     .map((item) => {
       const product = CATALOG.find((p) => p.id === item.productId)
       const variant = product?.variants.find((v) => v.id === item.variantId)
       if (!product || !variant) return null
       const placement = categoryPlacement(item.position[0], item.position[2], product.category)
-      return `• ${product.name} (${product.subtitle}) — color: ${variant.name} — ${placement}`
+      return `• ${product.category.toUpperCase()}: Replace with "${product.name}" — ${product.subtitle} — color: ${variant.name} — position: ${placement}`
     })
     .filter(Boolean)
     .join('\n')
 
   const prompt =
-    `Photorealistic interior design room staging edit. ` +
-    `Room: ${result.room.name}. ` +
-    `Keep ALL architectural elements exactly as-is: walls, windows, doors, ceiling, existing ceiling lights, plants on windowsill, curtains. ` +
-    `Remove all existing freestanding furniture from the floor. ` +
-    `Place the following new furniture pieces realistically into the scene with accurate perspective, shadows and scale:\n` +
-    itemLines +
-    `\nMaintain the same camera angle and natural lighting. Result must look like a professional interior design photograph.`
+    `Subtle furniture swap edit on this room photo. ` +
+    `STRICT RULES — keep ALL of the following COMPLETELY UNCHANGED: ` +
+    `wall color, floor material and color, ceiling, all ceiling lights, windows, curtains, wall art/paintings, ` +
+    `plants, architectural details, room proportions, camera angle, and perspective. ` +
+    `ONLY swap these specific furniture pieces and nothing else:\n` +
+    itemLines + `\n` +
+    `Each replacement must match the original piece's position, scale, and perspective exactly. ` +
+    `The result should look like the SAME photo with ONLY those pieces swapped. ` +
+    `Photorealistic, same lighting direction, same shadows.`
 
   const blob = await resizeToBlob(imageBase64, mimeType, 1024)
   const file = new File([blob], 'room.png', { type: 'image/png' })

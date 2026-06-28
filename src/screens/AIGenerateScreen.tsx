@@ -99,25 +99,37 @@ const HotspotCard = ({
 
   return (
     <div style={cardStyle} className={styles.hotspotCard}>
-      <button className={styles.hotspotCardClose} onClick={onClose}><IconX /></button>
-
-      <div className={styles.hotspotCardHeader}>
-        <div className={styles.hotspotCardSwatch} style={{ background: variant.color }} />
-        <div>
-          <div className={styles.hotspotCardName}>{product.name}</div>
-          <div className={styles.hotspotCardVariant}>{variant.name}</div>
+      {/* Product photo */}
+      <div className={styles.hotspotCardImgWrap}>
+        <img
+          src={product.thumbnailUrl}
+          alt={product.name}
+          className={styles.hotspotCardImgEl}
+        />
+        <div className={styles.hotspotCardImgVariant}>
+          <span className={styles.hotspotCardColorDot} style={{ background: variant.color }} />
+          {variant.name}
         </div>
-        <div className={styles.hotspotCardNum}>{info.index + 1}</div>
+        <button className={styles.hotspotCardClose} onClick={onClose}><IconX /></button>
       </div>
 
-      <div className={styles.hotspotCardSubtitle}>{product.subtitle}</div>
-      <div className={styles.hotspotCardReason}>"{info.reason}"</div>
+      <div className={styles.hotspotCardBody}>
+        <div className={styles.hotspotCardHeader}>
+          <div>
+            <div className={styles.hotspotCardName}>{product.name}</div>
+            <div className={styles.hotspotCardSubtitle}>{product.subtitle}</div>
+          </div>
+          <div className={styles.hotspotCardNum}>{info.index + 1}</div>
+        </div>
 
-      <div className={styles.hotspotCardFooter}>
-        <span className={styles.hotspotCardPrice}>${product.price.toLocaleString()}</span>
-        <button className={styles.hotspotCardCta} onClick={onOpenPlanner}>
-          <Icon3D /> View in 3D
-        </button>
+        <div className={styles.hotspotCardReason}>"{info.reason}"</div>
+
+        <div className={styles.hotspotCardFooter}>
+          <span className={styles.hotspotCardPrice}>${product.price.toLocaleString()}</span>
+          <button className={styles.hotspotCardCta} onClick={onOpenPlanner}>
+            <Icon3D /> View in 3D
+          </button>
+        </div>
       </div>
     </div>
   )
