@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { useUiStore } from '../stores/uiStore'
 import { useRoomStore } from '../stores/roomStore'
-import { analyzeRoomWithAI, getStoredApiKey, saveApiKey } from '../services/openai'
+import { analyzeRoomWithAI, generateEditedRoomPhoto, getStoredApiKey, saveApiKey } from '../services/openai'
 import { CATALOG } from '../constants/catalog'
 import type { AIDesignResult } from '../services/openai'
 import styles from './AIGenerateScreen.module.css'
@@ -45,6 +45,12 @@ const Icon3D = () => (
     <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
   </svg>
 )
+const IconImage = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+    <polyline points="21 15 16 10 5 21"/>
+  </svg>
+)
 
 // ── Loading steps ─────────────────────────────────────────────────────────────
 
@@ -52,7 +58,7 @@ const STEPS = [
   'Scanning room dimensions…',
   'Analyzing style and atmosphere…',
   'Selecting furniture from catalog…',
-  'Creating your 3D design…',
+  'Creating your 3D layout…',
 ]
 
 // ── Hotspot card ──────────────────────────────────────────────────────────────
@@ -80,17 +86,15 @@ const HotspotCard = ({
   const variant = product?.variants.find((v) => v.id === info.variantId)
   if (!product || !variant) return null
 
-  // Position card: if dot is in right half → show card to the left, else right
-  // If dot is in bottom half → show card above, else below
   const cardStyle: React.CSSProperties = {
     position: 'absolute',
     zIndex: 30,
-    ...(info.x > 0.5
-      ? { right: `calc(${(1 - info.x) * 100}% + 20px)` }
-      : { left: `calc(${info.x * 100}% + 20px)` }),
-    ...(info.y > 0.55
-      ? { bottom: `calc(${(1 - info.y) * 100}% + 10px)` }
-      : { top: `calc(${info.y * 100}% + 10px)` }),
+    ...(info.x > 0.55
+      ? { right: `calc(${(1 - info.x) * 100}% + 18px)` }
+      : { left: `calc(${info.x * 100}% + 18px)` }),
+    ...(info.y > 0.5
+      ? { bottom: `calc(${(1 - info.y) * 100}% + 8px)` }
+      : { top: `calc(${info.y * 100}% + 8px)` }),
   }
 
   return (
@@ -122,12 +126,14 @@ const HotspotCard = ({
 // ── Photo with hotspot overlay ────────────────────────────────────────────────
 
 const PhotoHotspots = ({
-  imagePreview,
+  src,
+  isGenerating,
   result,
   onOpenPlanner,
   onChangePhoto,
 }: {
-  imagePreview: string
+  src: string
+  isGenerating: boolean
   result: AIDesignResult
   onOpenPlanner: () => void
   onChangePhoto: () => void
@@ -148,21 +154,35 @@ const PhotoHotspots = ({
 
   return (
     <div className={styles.photoOverlayWrap}>
-      <img src={imagePreview} alt="Room" className={styles.overlayPhoto} />
+      <img
+        src={src}
+        alt="Room design"
+        className={`${styles.overlayPhoto} ${isGenerating ? styles.photoGenerating : ''}`}
+      />
 
-      {/* Change photo button */}
-      <button className={styles.changePhoto} onClick={onChangePhoto}>
-        Change photo
-      </button>
+      <button className={styles.changePhoto} onClick={onChangePhoto}>Change photo</button>
 
-      {/* Hotspot dots */}
-      {hotspots.map((h) => (
+      {/* Generating overlay */}
+      {isGenerating && (
+        <div className={styles.generatingOverlay}>
+          <div className={styles.genSpinner} />
+          <div className={styles.genText}>
+            <span className={styles.genTitle}>AI is staging your room…</span>
+            <span className={styles.genSub}>Placing furniture into the photo</span>
+          </div>
+          <div className={styles.genBar}>
+            <div className={styles.genBarFill} />
+          </div>
+        </div>
+      )}
+
+      {/* Hotspot dots — always visible */}
+      {!isGenerating && hotspots.map((h) => (
         <button
           key={h.instanceId}
           className={`${styles.hotspot} ${activeId === h.instanceId ? styles.hotspotActive : ''}`}
           style={{ left: `${h.x * 100}%`, top: `${h.y * 100}%` }}
           onClick={() => setActiveId(activeId === h.instanceId ? null : h.instanceId)}
-          title={`Item ${h.index + 1}`}
         >
           <span className={styles.hotspotRing} />
           <span className={styles.hotspotRing2} />
@@ -172,7 +192,6 @@ const PhotoHotspots = ({
         </button>
       ))}
 
-      {/* Active card */}
       {activeInfo && (
         <HotspotCard
           info={activeInfo}
@@ -181,10 +200,12 @@ const PhotoHotspots = ({
         />
       )}
 
-      {/* Tap hint */}
-      <div className={styles.hotspotHint}>
-        <IconSparkle /> Tap the dots to explore furniture
-      </div>
+      {/* Bottom hint */}
+      {!isGenerating && (
+        <div className={styles.hotspotHint}>
+          <IconSparkle /> Tap the dots to explore furniture
+        </div>
+      )}
     </div>
   )
 }
@@ -207,8 +228,11 @@ export const AIGenerateScreen = () => {
   const [apiKey, setApiKey] = useState(getStoredApiKey())
   const [showKeyInput, setShowKeyInput] = useState(!getStoredApiKey())
   const [keyDraft, setKeyDraft] = useState('')
-
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [generatedPhoto, setGeneratedPhoto] = useState<string | null>(null)
+  const [isGeneratingPhoto, setIsGeneratingPhoto] = useState(false)
+  // store base64 so Phase 2 can use it
+  const base64Ref = useRef<string>('')
+  const mimeRef = useRef<string>('image/jpeg')
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -218,6 +242,7 @@ export const AIGenerateScreen = () => {
     setImageFile(file)
     setImagePreview(URL.createObjectURL(file))
     setResult(null)
+    setGeneratedPhoto(null)
     setStatus('idle')
     setErrorMsg('')
   }
@@ -242,6 +267,8 @@ export const AIGenerateScreen = () => {
     setKeyDraft('')
   }
 
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const analyze = async () => {
     if (!imageFile) return
     if (!apiKey) { setShowKeyInput(true); return }
@@ -249,6 +276,7 @@ export const AIGenerateScreen = () => {
     setStatus('loading')
     setCurrentStep(0)
     setErrorMsg('')
+    setGeneratedPhoto(null)
 
     const interval = setInterval(() => {
       setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1))
@@ -261,13 +289,24 @@ export const AIGenerateScreen = () => {
         reader.onerror = reject
         reader.readAsDataURL(imageFile)
       })
+      base64Ref.current = base64
+      mimeRef.current = imageFile.type || 'image/jpeg'
 
-      const aiResult = await analyzeRoomWithAI(base64, imageFile.type || 'image/jpeg')
+      // ── Phase 1: analyze ──────────────────────────────────────────────────
+      const aiResult = await analyzeRoomWithAI(base64, mimeRef.current)
       clearInterval(interval)
       setCurrentStep(STEPS.length - 1)
-      await new Promise((r) => setTimeout(r, 400))
+      await new Promise((r) => setTimeout(r, 300))
       setResult(aiResult)
       setStatus('done')
+
+      // ── Phase 2: edit the photo (non-blocking) ────────────────────────────
+      setIsGeneratingPhoto(true)
+      generateEditedRoomPhoto(base64, mimeRef.current, aiResult)
+        .then((b64) => setGeneratedPhoto(`data:image/png;base64,${b64}`))
+        .catch((err) => console.warn('Photo edit skipped:', err))
+        .finally(() => setIsGeneratingPhoto(false))
+
     } catch (err) {
       clearInterval(interval)
       const msg = String(err)
@@ -294,13 +333,14 @@ export const AIGenerateScreen = () => {
     setImagePreview('')
     setImageFile(null)
     setResult(null)
+    setGeneratedPhoto(null)
+    setIsGeneratingPhoto(false)
     setStatus('idle')
     setErrorMsg('')
   }
 
   return (
     <div className={styles.screen}>
-      {/* Header */}
       <header className={styles.header}>
         <button className={styles.backBtn} onClick={() => setScreen('welcome')}>
           <IconBack /> Back
@@ -314,7 +354,7 @@ export const AIGenerateScreen = () => {
 
       <div className={styles.content}>
 
-        {/* API key input */}
+        {/* API key */}
         {showKeyInput && (
           <div className={styles.keyBox}>
             <div className={styles.keyBody}>
@@ -349,7 +389,7 @@ export const AIGenerateScreen = () => {
           </div>
         )}
 
-        {/* Upload area */}
+        {/* Upload */}
         {!imagePreview && (
           <div
             className={`${styles.dropZone} ${isDragOver ? styles.dragOver : ''}`}
@@ -371,15 +411,15 @@ export const AIGenerateScreen = () => {
           </div>
         )}
 
-        {/* Preview before analysis */}
+        {/* Preview before analyze */}
         {imagePreview && status === 'idle' && (
           <div className={styles.previewRow}>
             <div className={styles.previewWrap}>
-              <img src={imagePreview} alt="Room to analyze" className={styles.preview} />
+              <img src={imagePreview} alt="Room" className={styles.preview} />
               <button className={styles.changePhoto} onClick={resetToUpload}>Change photo</button>
             </div>
             <button className={styles.analyzeBtn} onClick={analyze} disabled={!imageFile}>
-              <IconSparkle /> Analyze with AI
+              <IconSparkle /> Analyze &amp; Design with AI
             </button>
           </div>
         )}
@@ -387,7 +427,7 @@ export const AIGenerateScreen = () => {
         {/* Error */}
         {errorMsg && <p className={styles.error}>{errorMsg}</p>}
 
-        {/* Loading */}
+        {/* Loading Phase 1 */}
         {status === 'loading' && (
           <div className={styles.loadingBox}>
             <div className={styles.loadingSpinner} />
@@ -405,11 +445,10 @@ export const AIGenerateScreen = () => {
           </div>
         )}
 
-        {/* Result — photo with hotspots */}
+        {/* Result */}
         {status === 'done' && result && (
           <div className={styles.resultWrap}>
 
-            {/* Room title */}
             <div className={styles.resultHeader}>
               <div className={styles.sparkleTag}><IconSparkle /> AI Design Ready</div>
               <h2 className={styles.roomName}>{result.room.name}</h2>
@@ -423,15 +462,28 @@ export const AIGenerateScreen = () => {
               </div>
             </div>
 
-            {/* Photo with hotspot dots */}
+            {/* Phase tag */}
+            {isGeneratingPhoto ? (
+              <div className={styles.phaseTag}>
+                <div className={styles.phaseDot} />
+                Phase 2 — AI is editing the photo with your furniture…
+              </div>
+            ) : generatedPhoto ? (
+              <div className={styles.phaseTagDone}>
+                <IconImage /> Room staged! Tap dots to explore items.
+              </div>
+            ) : null}
+
+            {/* Photo with hotspot overlay */}
             <PhotoHotspots
-              imagePreview={imagePreview}
+              src={generatedPhoto || imagePreview}
+              isGenerating={isGeneratingPhoto}
               result={result}
               onOpenPlanner={openInPlanner}
               onChangePhoto={resetToUpload}
             />
 
-            {/* Item legend below */}
+            {/* Legend */}
             <div className={styles.legend}>
               {result.placedItems.map((item, index) => {
                 const product = CATALOG.find((p) => p.id === item.productId)
@@ -449,12 +501,11 @@ export const AIGenerateScreen = () => {
               })}
             </div>
 
-            {/* CTAs */}
             <button className={styles.openBtn} onClick={openInPlanner}>
               Open in 3D Planner <IconArrow />
             </button>
             <button className={styles.reanalyzeBtn} onClick={resetToUpload}>
-              Try again with a different photo
+              Try with a different photo
             </button>
           </div>
         )}

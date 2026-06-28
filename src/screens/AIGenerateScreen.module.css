@@ -330,6 +330,107 @@
   display: block;
 }
 
+/* ── Phase tags ──────────────────────────────────────────────────────────── */
+.phaseTag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  color: #92400E;
+  font-weight: 500;
+}
+.phaseDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #F59E0B;
+  flex-shrink: 0;
+  animation: pulse 1s ease infinite;
+}
+.phaseTagDone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  color: #166534;
+  font-weight: 500;
+}
+
+/* ── Generating overlay ───────────────────────────────────────────────────── */
+.generatingOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 10, 20, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 15;
+  border-radius: 20px;
+}
+.genSpinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(255,255,255,0.2);
+  border-top-color: #A78BFA;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+.genText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.genTitle {
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.genSub {
+  color: rgba(255,255,255,0.65);
+  font-size: 0.78rem;
+}
+.genBar {
+  width: 160px;
+  height: 3px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.genBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #7C3AED, #A855F7, #7C3AED);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s linear infinite;
+  border-radius: 999px;
+  width: 60%;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Photo fade when generating */
+.photoGenerating {
+  filter: brightness(0.4) blur(1px);
+  transition: filter 0.4s ease;
+}
+.overlayPhoto {
+  transition: filter 0.5s ease;
+}
+
 /* Hint bar at bottom of photo */
 .hotspotHint {
   position: absolute;

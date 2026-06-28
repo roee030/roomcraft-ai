@@ -262,3 +262,94 @@ DESIGN RULES:
 
   return { room, placedItems, reasons, photoPositions }
 }
+
+// ── Image editing — place furniture into the actual photo ─────────────────────
+
+function categoryPlacement(x: number, z: number, category: string): string {
+  const lr = x < -0.3 ? 'left' : x > 0.3 ? 'right' : 'center'
+  const fb = z < -0.3 ? 'back wall' : z > 0.3 ? 'foreground' : 'middle'
+  const map: Record<string, string> = {
+    'bed':          `centered against the back wall`,
+    'sofa':         `against the back wall, facing the center of the room`,
+    'dresser':      `against the ${lr} wall`,
+    'nightstand':   `beside the bed on the ${lr} side`,
+    'coffee-table': `in the center of the seating area`,
+    'tv-unit':      `against the wall opposite the sofa`,
+    'rug':          `flat on the floor in the center, under the seating`,
+    'shelf':        `tall, against the ${lr} wall`,
+    'lamp-floor':   `standing in the ${lr} corner`,
+    'lamp-table':   `on the nightstand or side surface`,
+    'desk':         `against the ${lr} wall near the window`,
+    'office-chair': `tucked in front of the desk`,
+    'dining-table': `centered in the room`,
+    'dining-chair': `around the dining table`,
+    'armchair':     `in the ${lr} ${fb} area`,
+  }
+  return map[category] ?? `on the ${lr} side, ${fb}`
+}
+
+async function resizeToBlob(base64: string, mimeType: string, maxDim = 1024): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height))
+      const w = Math.round(img.width * scale)
+      const h = Math.round(img.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),
+        'image/png',
+      )
+    }
+    img.onerror = reject
+    img.src = `data:${mimeType};base64,${base64}`
+  })
+}
+
+export async function generateEditedRoomPhoto(
+  imageBase64: string,
+  mimeType: string,
+  result: AIDesignResult,
+): Promise<string> {
+  const apiKey = getStoredApiKey()
+  if (!apiKey) throw new Error('NO_API_KEY')
+  const client = new OpenAI({ apiKey, dangerouslyAllowBrowser: true })
+
+  const itemLines = result.placedItems
+    .map((item) => {
+      const product = CATALOG.find((p) => p.id === item.productId)
+      const variant = product?.variants.find((v) => v.id === item.variantId)
+      if (!product || !variant) return null
+      const placement = categoryPlacement(item.position[0], item.position[2], product.category)
+      return `• ${product.name} (${product.subtitle}) — color: ${variant.name} — ${placement}`
+    })
+    .filter(Boolean)
+    .join('\n')
+
+  const prompt =
+    `Photorealistic interior design room staging edit. ` +
+    `Room: ${result.room.name}. ` +
+    `Keep ALL architectural elements exactly as-is: walls, windows, doors, ceiling, existing ceiling lights, plants on windowsill, curtains. ` +
+    `Remove all existing freestanding furniture from the floor. ` +
+    `Place the following new furniture pieces realistically into the scene with accurate perspective, shadows and scale:\n` +
+    itemLines +
+    `\nMaintain the same camera angle and natural lighting. Result must look like a professional interior design photograph.`
+
+  const blob = await resizeToBlob(imageBase64, mimeType, 1024)
+  const file = new File([blob], 'room.png', { type: 'image/png' })
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const response: any = await client.images.edit({
+    model: 'gpt-image-1',
+    image: file,
+    prompt,
+    n: 1,
+  } as Parameters<typeof client.images.edit>[0])
+
+  const b64: string | undefined = response?.data?.[0]?.b64_json
+  if (!b64) throw new Error('No image in response')
+  return b64
+}
