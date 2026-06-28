@@ -91,7 +91,7 @@ export const WelcomeScreen = () => {
           <ul className={styles.features}>
             <CheckItem>AI reads room dimensions</CheckItem>
             <CheckItem>Auto-selects furniture</CheckItem>
-            <CheckItem>Powered by Gemini 1.5 Flash</CheckItem>
+            <CheckItem>Powered by Gemini 2.0 Flash</CheckItem>
           </ul>
           <button className={`${styles.btn} ${styles.aiBtn}`}>
             Upload Photo <IconArrow />
