@@ -35,6 +35,16 @@ const IconKey = () => (
     <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
   </svg>
 )
+const IconX = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+)
+const Icon3D = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+  </svg>
+)
 
 // ── Loading steps ─────────────────────────────────────────────────────────────
 
@@ -45,7 +55,141 @@ const STEPS = [
   'Creating your 3D design…',
 ]
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── Hotspot card ──────────────────────────────────────────────────────────────
+
+interface HotspotInfo {
+  instanceId: string
+  index: number
+  x: number
+  y: number
+  productId: string
+  variantId: string
+  reason: string
+}
+
+const HotspotCard = ({
+  info,
+  onClose,
+  onOpenPlanner,
+}: {
+  info: HotspotInfo
+  onClose: () => void
+  onOpenPlanner: () => void
+}) => {
+  const product = CATALOG.find((p) => p.id === info.productId)
+  const variant = product?.variants.find((v) => v.id === info.variantId)
+  if (!product || !variant) return null
+
+  // Position card: if dot is in right half → show card to the left, else right
+  // If dot is in bottom half → show card above, else below
+  const cardStyle: React.CSSProperties = {
+    position: 'absolute',
+    zIndex: 30,
+    ...(info.x > 0.5
+      ? { right: `calc(${(1 - info.x) * 100}% + 20px)` }
+      : { left: `calc(${info.x * 100}% + 20px)` }),
+    ...(info.y > 0.55
+      ? { bottom: `calc(${(1 - info.y) * 100}% + 10px)` }
+      : { top: `calc(${info.y * 100}% + 10px)` }),
+  }
+
+  return (
+    <div style={cardStyle} className={styles.hotspotCard}>
+      <button className={styles.hotspotCardClose} onClick={onClose}><IconX /></button>
+
+      <div className={styles.hotspotCardHeader}>
+        <div className={styles.hotspotCardSwatch} style={{ background: variant.color }} />
+        <div>
+          <div className={styles.hotspotCardName}>{product.name}</div>
+          <div className={styles.hotspotCardVariant}>{variant.name}</div>
+        </div>
+        <div className={styles.hotspotCardNum}>{info.index + 1}</div>
+      </div>
+
+      <div className={styles.hotspotCardSubtitle}>{product.subtitle}</div>
+      <div className={styles.hotspotCardReason}>"{info.reason}"</div>
+
+      <div className={styles.hotspotCardFooter}>
+        <span className={styles.hotspotCardPrice}>${product.price.toLocaleString()}</span>
+        <button className={styles.hotspotCardCta} onClick={onOpenPlanner}>
+          <Icon3D /> View in 3D
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Photo with hotspot overlay ────────────────────────────────────────────────
+
+const PhotoHotspots = ({
+  imagePreview,
+  result,
+  onOpenPlanner,
+  onChangePhoto,
+}: {
+  imagePreview: string
+  result: AIDesignResult
+  onOpenPlanner: () => void
+  onChangePhoto: () => void
+}) => {
+  const [activeId, setActiveId] = useState<string | null>(null)
+
+  const hotspots: HotspotInfo[] = result.placedItems.map((item, index) => ({
+    instanceId: item.instanceId,
+    index,
+    x: result.photoPositions[item.instanceId]?.x ?? 0.5,
+    y: result.photoPositions[item.instanceId]?.y ?? 0.5,
+    productId: item.productId,
+    variantId: item.variantId,
+    reason: result.reasons[item.instanceId] ?? '',
+  }))
+
+  const activeInfo = hotspots.find((h) => h.instanceId === activeId) ?? null
+
+  return (
+    <div className={styles.photoOverlayWrap}>
+      <img src={imagePreview} alt="Room" className={styles.overlayPhoto} />
+
+      {/* Change photo button */}
+      <button className={styles.changePhoto} onClick={onChangePhoto}>
+        Change photo
+      </button>
+
+      {/* Hotspot dots */}
+      {hotspots.map((h) => (
+        <button
+          key={h.instanceId}
+          className={`${styles.hotspot} ${activeId === h.instanceId ? styles.hotspotActive : ''}`}
+          style={{ left: `${h.x * 100}%`, top: `${h.y * 100}%` }}
+          onClick={() => setActiveId(activeId === h.instanceId ? null : h.instanceId)}
+          title={`Item ${h.index + 1}`}
+        >
+          <span className={styles.hotspotRing} />
+          <span className={styles.hotspotRing2} />
+          <span className={styles.hotspotDot}>
+            <span className={styles.hotspotNum}>{h.index + 1}</span>
+          </span>
+        </button>
+      ))}
+
+      {/* Active card */}
+      {activeInfo && (
+        <HotspotCard
+          info={activeInfo}
+          onClose={() => setActiveId(null)}
+          onOpenPlanner={onOpenPlanner}
+        />
+      )}
+
+      {/* Tap hint */}
+      <div className={styles.hotspotHint}>
+        <IconSparkle /> Tap the dots to explore furniture
+      </div>
+    </div>
+  )
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 type Status = 'idle' | 'loading' | 'done' | 'error'
 
@@ -106,19 +250,14 @@ export const AIGenerateScreen = () => {
     setCurrentStep(0)
     setErrorMsg('')
 
-    // Cycle through loading steps visually while Gemini processes
     const interval = setInterval(() => {
       setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1))
-    }, 1600)
+    }, 1800)
 
     try {
-      // Convert image to base64
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader()
-        reader.onload = () => {
-          const url = reader.result as string
-          resolve(url.split(',')[1])  // strip the data URL prefix
-        }
+        reader.onload = () => resolve((reader.result as string).split(',')[1])
         reader.onerror = reject
         reader.readAsDataURL(imageFile)
       })
@@ -134,8 +273,8 @@ export const AIGenerateScreen = () => {
       const msg = String(err)
       if (msg.includes('NO_API_KEY')) {
         setShowKeyInput(true)
-        setErrorMsg('Please enter your Gemini API key to continue.')
-      } else if (msg.includes('API_KEY_INVALID') || msg.includes('401')) {
+        setErrorMsg('Please enter your OpenAI API key to continue.')
+      } else if (msg.includes('401') || msg.includes('Incorrect API key')) {
         setShowKeyInput(true)
         setErrorMsg('Invalid API key. Please check and try again.')
       } else {
@@ -149,6 +288,14 @@ export const AIGenerateScreen = () => {
     if (!result) return
     loadAIDesign(result.room, result.placedItems)
     setScreen('planner')
+  }
+
+  const resetToUpload = () => {
+    setImagePreview('')
+    setImageFile(null)
+    setResult(null)
+    setStatus('idle')
+    setErrorMsg('')
   }
 
   return (
@@ -170,11 +317,8 @@ export const AIGenerateScreen = () => {
         {/* API key input */}
         {showKeyInput && (
           <div className={styles.keyBox}>
-            <KeyIcon />
             <div className={styles.keyBody}>
-              <p className={styles.keyTitle}>
-                <IconKey /> OpenAI API Key
-              </p>
+              <p className={styles.keyTitle}><IconKey /> OpenAI API Key</p>
               <p className={styles.keyDesc}>
                 Get a key at{' '}
                 <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">
@@ -185,7 +329,7 @@ export const AIGenerateScreen = () => {
                 <input
                   className={styles.keyInput}
                   type="password"
-                  placeholder="AIza…"
+                  placeholder="sk-proj-…"
                   value={keyDraft}
                   onChange={(e) => setKeyDraft(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && saveKey()}
@@ -227,30 +371,23 @@ export const AIGenerateScreen = () => {
           </div>
         )}
 
-        {/* Preview + action */}
-        {imagePreview && status !== 'loading' && (
+        {/* Preview before analysis */}
+        {imagePreview && status === 'idle' && (
           <div className={styles.previewRow}>
             <div className={styles.previewWrap}>
               <img src={imagePreview} alt="Room to analyze" className={styles.preview} />
-              <button
-                className={styles.changePhoto}
-                onClick={() => { setImagePreview(''); setImageFile(null); setResult(null); setStatus('idle') }}
-              >
-                Change photo
-              </button>
+              <button className={styles.changePhoto} onClick={resetToUpload}>Change photo</button>
             </div>
-            {status !== 'done' && (
-              <button className={styles.analyzeBtn} onClick={analyze} disabled={!imageFile}>
-                <IconSparkle /> Analyze with AI
-              </button>
-            )}
+            <button className={styles.analyzeBtn} onClick={analyze} disabled={!imageFile}>
+              <IconSparkle /> Analyze with AI
+            </button>
           </div>
         )}
 
         {/* Error */}
         {errorMsg && <p className={styles.error}>{errorMsg}</p>}
 
-        {/* Loading state */}
+        {/* Loading */}
         {status === 'loading' && (
           <div className={styles.loadingBox}>
             <div className={styles.loadingSpinner} />
@@ -268,44 +405,56 @@ export const AIGenerateScreen = () => {
           </div>
         )}
 
-        {/* Results */}
+        {/* Result — photo with hotspots */}
         {status === 'done' && result && (
-          <div className={styles.results}>
-            <div className={styles.resultsHeader}>
+          <div className={styles.resultWrap}>
+
+            {/* Room title */}
+            <div className={styles.resultHeader}>
               <div className={styles.sparkleTag}><IconSparkle /> AI Design Ready</div>
               <h2 className={styles.roomName}>{result.room.name}</h2>
               <div className={styles.roomMeta}>
                 <span>📐 {result.room.width}m × {result.room.depth}m</span>
                 <span>🎨 {result.room.floorType} floor</span>
-                <span style={{ background: result.room.wallColor, border: '1px solid rgba(0,0,0,0.1)' }}
-                      className={styles.wallSwatch} />
+                <span
+                  className={styles.wallSwatch}
+                  style={{ background: result.room.wallColor, border: '1px solid rgba(0,0,0,0.1)' }}
+                />
               </div>
             </div>
 
-            <div className={styles.itemList}>
-              <p className={styles.itemListTitle}>
-                {result.placedItems.length} furniture pieces selected
-              </p>
-              {result.placedItems.map((item) => {
+            {/* Photo with hotspot dots */}
+            <PhotoHotspots
+              imagePreview={imagePreview}
+              result={result}
+              onOpenPlanner={openInPlanner}
+              onChangePhoto={resetToUpload}
+            />
+
+            {/* Item legend below */}
+            <div className={styles.legend}>
+              {result.placedItems.map((item, index) => {
                 const product = CATALOG.find((p) => p.id === item.productId)
                 const variant = product?.variants.find((v) => v.id === item.variantId)
                 return (
-                  <div key={item.instanceId} className={styles.itemRow}>
-                    <div className={styles.itemSwatch} style={{ background: variant?.color ?? '#ccc' }} />
-                    <div className={styles.itemInfo}>
-                      <span className={styles.itemName}>{product?.name} — {variant?.name}</span>
-                      <span className={styles.itemReason}>{result.reasons[item.instanceId]}</span>
+                  <div key={item.instanceId} className={styles.legendRow}>
+                    <div className={styles.legendNum}>{index + 1}</div>
+                    <div className={styles.legendSwatch} style={{ background: variant?.color ?? '#ccc' }} />
+                    <div className={styles.legendInfo}>
+                      <span className={styles.legendName}>{product?.name} — {variant?.name}</span>
                     </div>
+                    <span className={styles.legendPrice}>${product?.price.toLocaleString()}</span>
                   </div>
                 )
               })}
             </div>
 
+            {/* CTAs */}
             <button className={styles.openBtn} onClick={openInPlanner}>
               Open in 3D Planner <IconArrow />
             </button>
-            <button className={styles.reanalyzeBtn} onClick={() => { setResult(null); setStatus('idle') }}>
-              Try again with different photo
+            <button className={styles.reanalyzeBtn} onClick={resetToUpload}>
+              Try again with a different photo
             </button>
           </div>
         )}
@@ -314,6 +463,3 @@ export const AIGenerateScreen = () => {
     </div>
   )
 }
-
-// tiny helper to satisfy TS — just an empty element (key icon already imported)
-const KeyIcon = () => null

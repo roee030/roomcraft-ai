@@ -49,7 +49,7 @@
 /* ── Content ─────────────────────────────────────────────────────────────── */
 .content {
   flex: 1;
-  max-width: 640px;
+  max-width: 680px;
   width: 100%;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
@@ -64,13 +64,8 @@
   border: 1.5px solid #DDD0F8;
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
 }
-
 .keyBody { flex: 1; }
-
 .keyTitle {
   display: flex;
   align-items: center;
@@ -80,17 +75,13 @@
   color: #6D28D9;
   margin: 0 0 4px;
 }
-
 .keyDesc {
   font-size: 0.82rem;
   color: #8B5CF6;
   margin: 0 0 12px;
 }
-
 .keyDesc a { color: #7C3AED; text-decoration: underline; }
-
 .keyRow { display: flex; gap: 8px; }
-
 .keyInput {
   flex: 1;
   padding: 8px 12px;
@@ -101,7 +92,6 @@
   background: white;
 }
 .keyInput:focus { border-color: #7C3AED; }
-
 .keySaveBtn {
   padding: 8px 18px;
   background: #7C3AED;
@@ -111,7 +101,6 @@
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
 }
 .keySaveBtn:hover { background: #6D28D9; }
 
@@ -126,7 +115,6 @@
   border-radius: 8px;
   padding: 8px 14px;
 }
-
 .keyChangeBtn {
   margin-left: auto;
   background: none;
@@ -147,49 +135,41 @@
   background: rgba(255,255,255,0.6);
   transition: border-color 0.15s, background 0.15s;
 }
-
 .dropZone:hover, .dragOver {
   border-color: #7C3AED;
   background: #FAF5FF;
 }
-
 .dropIcon {
   color: #A78BFA;
   margin-bottom: 1rem;
   display: flex;
   justify-content: center;
 }
-
 .dropTitle {
   font-size: 1.1rem;
   font-weight: 600;
   color: #333;
   margin: 0 0 6px;
 }
-
 .dropSub {
   font-size: 0.85rem;
   color: #888;
   margin: 0;
 }
 
-/* ── Preview ─────────────────────────────────────────────────────────────── */
+/* ── Preview before analysis ─────────────────────────────────────────────── */
 .previewRow {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
-
 .previewWrap { position: relative; }
-
 .preview {
   width: 100%;
-  max-height: 320px;
-  object-fit: cover;
+  height: auto;
   border-radius: 16px;
   display: block;
 }
-
 .changePhoto {
   position: absolute;
   top: 10px;
@@ -201,6 +181,7 @@
   border-radius: 8px;
   font-size: 0.8rem;
   cursor: pointer;
+  z-index: 5;
 }
 .changePhoto:hover { background: rgba(0,0,0,0.75); }
 
@@ -245,7 +226,6 @@
   border-radius: 20px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.07);
 }
-
 .loadingSpinner {
   width: 48px;
   height: 48px;
@@ -263,7 +243,6 @@
   width: 100%;
   max-width: 320px;
 }
-
 .step {
   display: flex;
   align-items: center;
@@ -272,10 +251,8 @@
   color: #aaa;
   transition: color 0.3s;
 }
-
 .stepActive { color: #7C3AED; font-weight: 600; }
 .stepDone   { color: #16a34a; }
-
 .stepDot {
   width: 8px;
   height: 8px;
@@ -284,9 +261,7 @@
   flex-shrink: 0;
   transition: background 0.3s;
 }
-
 .stepActive .stepDot {
-  background: #7C3AED;
   box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
   animation: pulse 1s ease infinite;
 }
@@ -295,19 +270,14 @@
   50%       { box-shadow: 0 0 0 6px rgba(124,58,237,0.08); }
 }
 
-/* ── Results ─────────────────────────────────────────────────────────────── */
-.results {
-  background: white;
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+/* ── Result wrapper ───────────────────────────────────────────────────────── */
+.resultWrap {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
-.resultsHeader { display: flex; flex-direction: column; gap: 8px; }
-
+.resultHeader { display: flex; flex-direction: column; gap: 8px; }
 .sparkleTag {
   display: inline-flex;
   align-items: center;
@@ -322,7 +292,6 @@
   text-transform: uppercase;
   width: fit-content;
 }
-
 .roomName {
   font-size: 1.4rem;
   font-weight: 700;
@@ -330,7 +299,6 @@
   margin: 0;
   letter-spacing: -0.02em;
 }
-
 .roomMeta {
   display: flex;
   align-items: center;
@@ -339,7 +307,6 @@
   color: #666;
   flex-wrap: wrap;
 }
-
 .wallSwatch {
   display: inline-block;
   width: 18px;
@@ -348,54 +315,284 @@
   flex-shrink: 0;
 }
 
-/* Item list */
-.itemListTitle {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #555;
-  margin: 0 0 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+/* ── Photo + hotspot overlay ─────────────────────────────────────────────── */
+.photoOverlayWrap {
+  position: relative;
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  user-select: none;
+}
+.overlayPhoto {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
-.itemList { display: flex; flex-direction: column; gap: 0; }
-
-.itemRow {
+/* Hint bar at bottom of photo */
+.hotspotHint {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 28px 16px 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
+  color: rgba(255,255,255,0.92);
+  font-size: 0.8rem;
+  font-weight: 500;
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid #F0F0F0;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
 }
-.itemRow:last-child { border-bottom: none; }
 
-.itemSwatch {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+/* ── Hotspot button ──────────────────────────────────────────────────────── */
+.hotspot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Pulsing rings */
+.hotspotRing,
+.hotspotRing2 {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(168, 85, 247, 0.4);
+  animation: hotspot-pulse 2.2s ease-out infinite;
+  pointer-events: none;
+}
+.hotspotRing2 {
+  background: rgba(124, 58, 237, 0.25);
+  animation-delay: 0.8s;
+}
+
+@keyframes hotspot-pulse {
+  0%   { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+/* Inner dot */
+.hotspotDot {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7C3AED, #A855F7);
+  box-shadow: 0 2px 14px rgba(124,58,237,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: 2px solid rgba(255,255,255,0.5);
+}
+
+.hotspot:hover .hotspotDot {
+  transform: scale(1.15);
+  box-shadow: 0 4px 20px rgba(124,58,237,0.85);
+}
+
+.hotspotActive .hotspotDot {
+  background: white;
+  transform: scale(1.2);
+  box-shadow: 0 4px 24px rgba(124,58,237,0.9);
+}
+.hotspotActive .hotspotNum {
+  color: #7C3AED;
+}
+
+/* Pause animation on active */
+.hotspotActive .hotspotRing,
+.hotspotActive .hotspotRing2 {
+  animation: none;
+  opacity: 0;
+}
+
+.hotspotNum {
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* ── Hotspot card popup ───────────────────────────────────────────────────── */
+.hotspotCard {
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 16px 56px rgba(0,0,0,0.24), 0 2px 8px rgba(0,0,0,0.1);
+  padding: 16px;
+  width: 235px;
+  animation: card-in 0.18s ease-out;
+}
+
+@keyframes card-in {
+  from { opacity: 0; transform: scale(0.9) translateY(4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.hotspotCardClose {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+}
+.hotspotCardClose:hover { background: #e5e7eb; }
+
+.hotspotCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-right: 22px;
+}
+.hotspotCardSwatch {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   flex-shrink: 0;
-  border: 1px solid rgba(0,0,0,0.08);
+  border: 1.5px solid rgba(0,0,0,0.08);
+}
+.hotspotCardName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111;
+  line-height: 1.2;
+}
+.hotspotCardVariant {
+  font-size: 0.76rem;
+  color: #999;
   margin-top: 2px;
 }
+.hotspotCardNum {
+  margin-left: auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7C3AED, #A855F7);
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
 
-.itemInfo { flex: 1; }
+.hotspotCardSubtitle {
+  font-size: 0.76rem;
+  color: #888;
+  margin-bottom: 8px;
+}
+.hotspotCardReason {
+  font-size: 0.79rem;
+  color: #555;
+  line-height: 1.5;
+  font-style: italic;
+  margin-bottom: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+.hotspotCardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.hotspotCardPrice {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111;
+}
+.hotspotCardCta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  background: linear-gradient(135deg, #7C3AED, #A855F7);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.hotspotCardCta:hover { opacity: 0.88; }
 
-.itemName {
-  display: block;
-  font-size: 0.9rem;
+/* ── Item legend ─────────────────────────────────────────────────────────── */
+.legend {
+  background: white;
+  border-radius: 16px;
+  padding: 0.75rem 1.25rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+}
+.legendRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #F5F5F5;
+}
+.legendRow:last-child { border-bottom: none; }
+
+.legendNum {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7C3AED, #A855F7);
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.legendSwatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.07);
+}
+.legendInfo { flex: 1; }
+.legendName {
+  font-size: 0.85rem;
   font-weight: 600;
   color: #222;
 }
-
-.itemReason {
-  display: block;
-  font-size: 0.8rem;
+.legendPrice {
+  font-size: 0.82rem;
   color: #888;
-  margin-top: 2px;
-  line-height: 1.4;
+  font-weight: 500;
+  flex-shrink: 0;
 }
 
-/* CTAs */
+/* ── CTAs ────────────────────────────────────────────────────────────────── */
 .openBtn {
   display: flex;
   align-items: center;
