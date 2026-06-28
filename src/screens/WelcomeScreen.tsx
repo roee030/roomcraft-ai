@@ -85,13 +85,13 @@ export const WelcomeScreen = () => {
           </div>
           <h2 className={styles.cardTitle}>Generate with AI</h2>
           <p className={styles.cardDesc}>
-            Upload a photo of your empty room. Gemini AI analyzes the space, picks
+            Upload a photo of your empty room. GPT-4o analyzes the space, picks
             matching furniture, and arranges everything — ready to explore in 3D.
           </p>
           <ul className={styles.features}>
             <CheckItem>AI reads room dimensions</CheckItem>
             <CheckItem>Auto-selects furniture</CheckItem>
-            <CheckItem>Powered by Gemini 2.0 Flash</CheckItem>
+            <CheckItem>Powered by GPT-4o mini</CheckItem>
           </ul>
           <button className={`${styles.btn} ${styles.aiBtn}`}>
             Upload Photo <IconArrow />
@@ -101,7 +101,7 @@ export const WelcomeScreen = () => {
       </div>
 
       <footer className={styles.footer}>
-        Built with React Three Fiber · Gemini Vision · Open catalog
+        Built with React Three Fiber · GPT-4o Vision · Open catalog
       </footer>
     </div>
   )

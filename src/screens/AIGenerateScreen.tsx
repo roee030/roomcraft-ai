@@ -1,9 +1,9 @@
 import { useState, useRef, useCallback } from 'react'
 import { useUiStore } from '../stores/uiStore'
 import { useRoomStore } from '../stores/roomStore'
-import { analyzeRoomWithGemini, getStoredApiKey, saveApiKey } from '../services/gemini'
+import { analyzeRoomWithAI, getStoredApiKey, saveApiKey } from '../services/openai'
 import { CATALOG } from '../constants/catalog'
-import type { AIDesignResult } from '../services/gemini'
+import type { AIDesignResult } from '../services/openai'
 import styles from './AIGenerateScreen.module.css'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -123,7 +123,7 @@ export const AIGenerateScreen = () => {
         reader.readAsDataURL(imageFile)
       })
 
-      const aiResult = await analyzeRoomWithGemini(base64, imageFile.type || 'image/jpeg')
+      const aiResult = await analyzeRoomWithAI(base64, imageFile.type || 'image/jpeg')
       clearInterval(interval)
       setCurrentStep(STEPS.length - 1)
       await new Promise((r) => setTimeout(r, 400))
@@ -173,12 +173,12 @@ export const AIGenerateScreen = () => {
             <KeyIcon />
             <div className={styles.keyBody}>
               <p className={styles.keyTitle}>
-                <IconKey /> Gemini API Key
+                <IconKey /> OpenAI API Key
               </p>
               <p className={styles.keyDesc}>
-                Get a free key at{' '}
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">
-                  aistudio.google.com
+                Get a key at{' '}
+                <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">
+                  platform.openai.com
                 </a>
               </p>
               <div className={styles.keyRow}>
@@ -198,7 +198,7 @@ export const AIGenerateScreen = () => {
 
         {!showKeyInput && apiKey && (
           <div className={styles.keyStatus}>
-            <IconKey /> Gemini API key configured
+            <IconKey /> OpenAI API key configured
             <button className={styles.keyChangeBtn} onClick={() => { setShowKeyInput(true); setKeyDraft('') }}>
               Change
             </button>
@@ -241,7 +241,7 @@ export const AIGenerateScreen = () => {
             </div>
             {status !== 'done' && (
               <button className={styles.analyzeBtn} onClick={analyze} disabled={!imageFile}>
-                <IconSparkle /> Analyze with Gemini
+                <IconSparkle /> Analyze with AI
               </button>
             )}
           </div>
